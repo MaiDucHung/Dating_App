@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+    <!-- Sidebar -->
+    <div id="sidebar" class="sidebar hidden">
+        <h2>Admin Dashboard</h2>
+        <ul>
+            <li onclick="showSection('usersSection')">Manage Users</li>
+            <li onclick="showSection('reportsSection')">Manage Reports</li>
+            <li onclick="showSection('matchesSection')">Manage Matches</li>
+            <li onclick="showSection('notificationsSection')">Send Notification</li>
+            <li onclick="logout()">Logout</li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div id="mainContent" class="main-content hidden">
+        <!-- Quản lý người dùng -->
+        <div id="usersSection" class="section hidden">
+            <h1>Manage Users</h1>
+            <input type="text" id="userSearch" placeholder="Search by ID or Email" oninput="searchUsers()">
+            <div id="usersList"></div>
+        </div>
+
+        <!-- Quản lý báo cáo -->
+        <div id="reportsSection" class="section hidden">
+            <h1>Manage Reports</h1>
+            <input type="text" id="reportSearch" placeholder="Search by Report ID or User ID" oninput="searchReports()">
+            <div id="reportsList"></div>
+        </div>
+
+        <!-- Quản lý match -->
+        <div id="matchesSection" class="section hidden">
+            <h1>Manage Matches</h1>
+            <input type="text" id="matchSearch" placeholder="Search by Match ID or Username" oninput="searchMatches()">
+            <div id="matchesList"></div>
+        </div>
+
+        <!-- Gửi thông báo -->
+        <div id="notificationsSection" class="section hidden">
+            <h1>Send Notification</h1>
+            <input type="text" id="notificationUserId" placeholder="User ID" />
+            <textarea id="notificationMessage" placeholder="Message" rows="3"></textarea>
+            <button onclick="sendNotification()">Send</button>
+        </div>
+    </div>
+
+    <!-- Đăng nhập -->
+    <div id="loginSection" class="section">
+        <h1>Admin Login</h1>
+        <input type="text" id="username" placeholder="Username (admin)" value="admin" />
+        <input type="password" id="password" placeholder="Password (123)" value="123" />
+        <button onclick="login()">Login</button>
+        <div id="errorMessage"></div>
+    </div>
+
+    <!-- Modal để xem profile -->
+    <!-- <div id="profileModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">×</span>
+            <h2>User Profile</h2>
+            <div id="profileContent"></div>
+        </div>
+    </div> -->
+
+   <script>
+    let allUsers = [];
+    let allReports = [];
+    let allMatches = [];
+
+    const token = localStorage.getItem('token');
+    if (token) {
+        showAdminPanel();
+    }
+
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const errorMessageDiv = document.getElementById('errorMessage');
+        errorMessageDiv.textContent = '';
+
+        try {
+            const response = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            const result = await response.json();
+            if (response.ok) {
+                localStorage.setItem('token', result.token);
+                showAdminPanel();
+            } else {
+                errorMessageDiv.textContent = 'Login failed: ' + result.message;
+            }
+        } catch (err) {
+            errorMessageDiv.textContent = 'Error: Unable to connect to server. ' + err.message;
+        }
+    }
+
+    function showAdminPanel() {
+        document.getElementById('loginSection').classList.add('hidden');
+        document.getElementById('sidebar').classList.remove('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        showSection('usersSection');
+    }
+
+    function showSection(sectionId) {
+        const sections = ['usersSection', 'reportsSection', 'matchesSection', 'notificationsSection'];
+        sections.forEach(id => {
+            document.getElementById(id).classList.add('hidden');
+        });
+        document.getElementById(sectionId).classList.remove('hidden');
+
+        if (sectionId === 'usersSection') fetchUsers();
+        if (sectionId === 'reportsSection') fetchReports();
+        if (sectionId === 'matchesSection') fetchMatches();
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.reload();
+    }
+
+    async function fetchUsers() {
+        try {
+            const response = await fetch('/api/admin/users', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            const users = await response.json();
+            console.log("Users data received:", users);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Session expired. Please login again.');
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                }
+                throw new Error('Failed to fetch users');
+            }
+            if (!Array.isArray(users)) {
+                alert('Error: Users data is not an array. Check server response.');
+                return;
+            }
+            allUsers = users;
+            renderUsers(allUsers);
+        } catch (err) {
+            alert('Error fetching users: ' + err.message);
+        }
+    }
+
+    function renderUsers(users) {
+        const usersList = document.getElementById('usersList');
+        usersList.innerHTML = users.map(user => `
+            <div class="user">
+                ID: ${user.id} - Username: ${user.username} <br> Email: ${user.email}
+                <button onclick="viewUserProfile('${user.id}')">View</button>
+                <button onclick="deleteUser('${user.id}')">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    function searchUsers() {
+        const query = document.getElementById('userSearch').value.toLowerCase();
+        let filteredUsers;
+
+        if (/^\d+$/.test(query)) {
+            filteredUsers = allUsers.filter(user => user.id.toString() === query);
+        } else {
+            filteredUsers = allUsers.filter(user => user.email.toLowerCase().includes(query));
+        }
+        renderUsers(filteredUsers);
+    }
+
+    async function fetchReports() {
+        try {
+            const response = await fetch('/api/admin/reports', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            const reports = await response.json();
+            console.log("Reports data received:", reports);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Session expired. Please login again.');
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                }
+                throw new Error('Failed to fetch reports');
+            }
+            if (!Array.isArray(reports)) {
+                alert('Error: Reports data is not an array. Check server response.');
+                return;
+            }
+            allReports = reports;
+            renderReports(allReports);
+        } catch (err) {
+            alert('Error fetching reports: ' + err.message);
+        }
+    }
+
+    function renderReports(reports) {
+        const reportsList = document.getElementById('reportsList');
+        reportsList.innerHTML = reports.map(report => `
+            <div class="report">
+                ID: ${report.id} - Reporter ID: ${report.reporter_id} reports User ${report.reported_user_id}<br>
+                Content: ${report.reason}
+                <button onclick="viewUserProfile('${report.reported_user_id}')">View Reported User</button>
+                <button onclick="resolveReport(${report.id})">Resolve</button>
+            </div>
+        `).join('');
+    }
+
+    function searchReports() {
+        const query = document.getElementById('reportSearch').value.toLowerCase();
+        let filteredReports;
+
+        if (/^\d+$/.test(query)) {
+            filteredReports = allReports.filter(report =>
+                report.id.toString() === query ||
+                report.reporter_id.toString() === query ||
+                report.reported_user_id.toString() === query
+            );
+        } else {
+            filteredReports = allReports;
+        }
+        renderReports(filteredReports);
+    }
+
+    async function fetchMatches() {
+        try {
+            const response = await fetch('/api/admin/matches', {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            const matches = await response.json();
+            console.log("Matches data received:", matches);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Session expired. Please login again.');
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                }
+                throw new Error('Failed to fetch matches');
+            }
+            if (!Array.isArray(matches)) {
+                alert('Error: Matches data is not an array. Check server response.');
+                return;
+            }
+            allMatches = matches;
+            renderMatches(allMatches);
+        } catch (err) {
+            alert('Error fetching matches: ' + err.message);
+        }
+    }
+
+    function renderMatches(matches) {
+        const matchesList = document.getElementById('matchesList');
+        matchesList.innerHTML = matches.map(match => `
+            <div class="match">
+                ID: ${match.id} - ${match.user1} matched with ${match.user2}
+                <button onclick="deleteMatch(${match.id})">Delete</button>
+            </div>
+        `).join('');
+    }
+
+    function searchMatches() {
+        const query = document.getElementById('matchSearch').value.toLowerCase();
+        let filteredMatches;
+
+        if (/^\d+$/.test(query)) {
+            filteredMatches = allMatches.filter(match => match.id.toString() === query);
+        } else {
+            filteredMatches = allMatches.filter(match =>
+                match.user1.toLowerCase().includes(query) ||
+                match.user2.toLowerCase().includes(query)
+            );
+        }
+        renderMatches(filteredMatches);
+    }
+
+    async function deleteUser(userId) {
+        try {
+            const response = await fetch(`/api/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (response.ok) {
+                alert('User deleted!');
+                fetchUsers();
+            } else {
+                alert('Failed to delete user!');
+            }
+        } catch (err) {
+            alert('Error deleting user: ' + err.message);
+        }
+    }
+
+    async function resolveReport(reportId) {
+        try {
+            const response = await fetch(`/api/admin/reports/${reportId}/resolve`, {
+                method: 'POST',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (response.ok) {
+                alert('Report resolved!');
+                fetchReports();
+            } else {
+                alert('Failed to resolve report!');
+            }
+        } catch (err) {
+            alert('Error resolving report: ' + err.message);
+        }
+    }
+
+    async function deleteMatch(matchId) {
+        try {
+            const response = await fetch(`/api/admin/matches/${matchId}`, {
+                method: 'DELETE',
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            if (response.ok) {
+                alert('Match deleted!');
+                fetchMatches();
+            } else {
+                alert('Failed to delete match!');
+            }
+        } catch (err) {
+            alert('Error deleting match: ' + err.message);
+        }
+    }
+
+    async function sendNotification() {
+        const userId = document.getElementById('notificationUserId').value.trim();
+        const message = document.getElementById('notificationMessage').value.trim();
+        const errorMessageDiv = document.getElementById('errorMessage');
+
+        if (!userId || !message) {
+            errorMessageDiv.textContent = 'User ID and Message cannot be empty!';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/admin/notifications', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${localStorage.getItem('token')}`,
+                },
+                body: JSON.stringify({ userId, message }),
+            });
+            const result = await response.json();
+            if (response.ok) {
+                alert('Notification sent!');
+                document.getElementById('notificationUserId').value = '';
+                document.getElementById('notificationMessage').value = '';
+                errorMessageDiv.textContent = '';
+            } else {
+                errorMessageDiv.textContent = 'Failed to send notification: ' + result.message;
+            }
+        } catch (err) {
+            errorMessageDiv.textContent = 'Error sending notification: ' + err.message;
+        }
+    }
+
+    async function viewUserProfile(userId) {
+        try {
+            console.log(`Fetching profile for userId: ${userId}`);
+            const response = await fetch(`/api/admin/users/${userId}/profile`, {
+                headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+            });
+            const user = await response.json();
+            console.log("Profile response:", user);
+            if (!response.ok) {
+                if (response.status === 401) {
+                    alert('Session expired. Please login again.');
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                } else if (response.status === 404) {
+                    alert('User not found!');
+                } else {
+                    throw new Error(`Failed with status ${response.status}`);
+                }
+            }
+            const profileContent = document.getElementById('profileContent');
+            profileContent.innerHTML = `
+                <p><strong>ID:</strong> ${user.id}</p>
+                <p><strong>Username:</strong> ${user.username}</p>
+                <p><strong>Email:</strong> ${user.email}</p>
+                <p><strong>Phone:</strong> ${user.phone || 'N/A'}</p>
+                <p><strong>Gender:</strong> ${user.gender || 'N/A'}</p>
+                <p><strong>Date of Birth:</strong> ${user.date_of_birth || 'N/A'}</p>
+                <p><strong>Is Verified:</strong> ${user.is_verified ? 'Yes' : 'No'}</p>
+                <p><strong>Is Active:</strong> ${user.is_active ? 'Yes' : 'No'}</p>
+                <p><strong>Last Active:</strong> ${user.last_active || 'N/A'}</p>
+                ${user.avatar ? `<img src="${user.avatar}" alt="Avatar" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin: 10px 0;">` : '<p>No avatar available</p>'}
+                <p><strong>Bio:</strong> ${user.bio || 'N/A'}</p>
+                <p><strong>Interests:</strong> ${user.interests || 'N/A'}</p>
+                <p><strong>Location:</strong> ${user.location || 'N/A'}</p>
+                <p><strong>City:</strong> ${user.city || 'N/A'}</p>
+                <p><strong>Height:</strong> ${user.height ? user.height + ' cm' : 'N/A'}</p>
+                <p><strong>Occupation:</strong> ${user.occupation || 'N/A'}</p>
+                <p><strong>Education:</strong> ${user.education || 'N/A'}</p>
+                <p><strong>Relationship Status:</strong> ${user.relationship_status || 'N/A'}</p>
+                <p><strong>Looking For:</strong> ${user.looking_for || 'N/A'}</p>
+            `;
+            document.getElementById('profileModal').classList.remove('hidden');
+        } catch (err) {
+            console.error("Error in viewUserProfile:", err);
+            alert('Failed to fetch user profile!');
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('profileModal');
+        if (modal) {
+            modal.classList.add('hidden');
+            console.log('Modal closed');
+        } else {
+            console.error('Modal element not found');
+        }
+    }
+</script>
+</body>
+</html>

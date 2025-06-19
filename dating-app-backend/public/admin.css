@@ -1,0 +1,375 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background-color: #e9ecef;
+  color: #333;
+  line-height: 1.6;
+  display: flex;
+  min-height: 100vh;
+}
+
+h1 {
+  color: #2c3e50;
+  font-size: 24px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 250px;
+  background-color: #2c3e50;
+  color: white;
+  padding: 20px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar h2 {
+  font-size: 20px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.sidebar ul {
+  list-style: none;
+}
+
+.sidebar li {
+  padding: 15px;
+  margin: 5px 0;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.sidebar li:hover {
+  background-color: #34495e;
+}
+
+.sidebar li:last-child {
+  background-color: #dc3545;
+  margin-top: 20px;
+}
+
+.sidebar li:last-child:hover {
+  background-color: #c82333;
+}
+
+/* Main Content */
+.main-content {
+  margin-left: 250px;
+  padding: 30px;
+  flex: 1;
+}
+
+.section {
+  background: #fff;
+  padding: 25px;
+  margin-bottom: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.section:hover {
+  transform: translateY(-3px);
+}
+
+/* Login Section */
+#loginSection {
+  max-width: 400px;
+  margin: 0 auto;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+#loginSection h1 {
+  text-align: center;
+}
+
+#errorMessage {
+  color: #dc3545;
+  font-size: 14px;
+  margin-top: 10px;
+  text-align: center;
+  font-weight: 500;
+}
+
+/* Input và Textarea */
+input, textarea {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  font-size: 16px;
+  transition: border-color 0.3s ease;
+}
+
+input:focus, textarea:focus {
+  border-color: #007bff;
+  outline: none;
+  box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Nút */
+button {
+  padding: 10px 20px;
+  margin: 5px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: translateY(0);
+}
+
+/* User, Report và Match */
+.user, .report, .match {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #f8f9fa;
+  border: 1px solid #dee2e6;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.user:hover, .report:hover, .match:hover {
+  background-color: #e9ecef;
+}
+
+/* Điều chỉnh các nút trong .user và .report */
+/* Điều chỉnh các nút trong .user và .report */
+.user button, .report button {
+  background-color: #dc3545;
+  padding: 6px 12px;
+  font-size: 14px;
+  margin: 0; /* Đảm bảo không có margin */
+  border-radius: 0; /* Xóa border-radius để các nút liền mạch */
+}
+
+.user button:first-of-type, .report button:first-of-type {
+  background-color: #17a2b8;
+}
+
+.user button:last-of-type, .report button:last-of-type {
+  background-color: #dc3545;
+}
+
+.user button, .report button {
+  display: inline-block; /* Đảm bảo các nút nằm trên cùng hàng */
+  vertical-align: middle; /* Căn giữa theo chiều dọc */
+}
+
+/* Loại bỏ khoảng cách giữa các nút */
+.user, .report {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0; /* Xóa gap giữa các phần tử */
+}
+.user button:first-of-type, .report button:first-of-type {
+    background-color: #17a2b8;
+    /* padding-left: 0px; */
+    margin-left: auto;
+}
+/* Đảm bảo nút sát nhau */
+.user button + button, .report button + button {
+  margin-left: -4px; /* Điều chỉnh để sát hơn, có thể thử -2px hoặc 0px */
+  border-left: none; /* Loại bỏ viền trái để liền mạch */
+}
+
+.match button {
+  background-color: #dc3545;
+  padding: 6px 12px;
+  font-size: 14px;
+  margin-left: 5px; /* Giữ nguyên cho .match */
+}
+
+.user button:first-of-type:hover, .report button:first-of-type:hover {
+  background-color: #138496;
+}
+
+.user button:last-of-type:hover, .report button:last-of-type:hover, .match button:hover {
+  background-color: #c82333;
+}
+
+/* Bố cục danh sách */
+#usersList, #reportsList, #matchesList {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 10px;
+}
+
+/* Thanh cuộn tùy chỉnh */
+#usersList::-webkit-scrollbar,
+#reportsList::-webkit-scrollbar,
+#matchesList::-webkit-scrollbar {
+  width: 8px;
+}
+
+#usersList::-webkit-scrollbar-thumb,
+#reportsList::-webkit-scrollbar-thumb,
+#matchesList::-webkit-scrollbar-thumb {
+  background-color: #adb5bd;
+  border-radius: 4px;
+}
+
+#usersList::-webkit-scrollbar-track,
+#reportsList::-webkit-scrollbar-track,
+#matchesList::-webkit-scrollbar-track {
+  background-color: #f1f3f5;
+}
+
+/* Notifications Section */
+#notificationsSection {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+#notificationsSection button {
+  display: block;
+  width: 150px;
+  margin: 10px auto;
+  background-color: #28a745;
+}
+
+#notificationsSection button:hover {
+  background-color: #218838;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 400px;
+  width: 100%;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+  z-index: 1;
+}
+
+.close:hover {
+  color: #dc3545;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 200px;
+  }
+
+  .main-content {
+    margin-left: 200px;
+    padding: 15px;
+  }
+
+  h1 {
+    font-size: 20px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 8px 16px;
+  }
+
+  input, textarea {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 600px) {
+  body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: static;
+    padding: 15px;
+  }
+
+  .sidebar h2 {
+    font-size: 18px;
+  }
+
+  .sidebar li {
+    padding: 10px;
+  }
+
+  .main-content {
+    margin-left: 0;
+    padding: 15px;
+  }
+
+  .section {
+    padding: 15px;
+  }
+
+  .user, .report, .match {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .user button, .report button, .match button {
+    align-self: flex-end;
+  }
+}
