@@ -7,7 +7,7 @@
 
 Clone project về máy:
 ```bash
-git clone https://github.com/yourusername/Dating-App.git
+git clone https://github.com/MaiDucHung/Dating-App.git
 cd Dating-App
 ```
 
